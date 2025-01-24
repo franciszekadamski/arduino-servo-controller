@@ -24,9 +24,22 @@ class ServoBoard:
 
     def send(self, pin, angle):
         try:
-            self.ser.write(f"{pin}{angle}\n".encode())
+            if pin < 10:
+                pin_string = f"0{pin}"
+            else:
+                pin_string = f"{pin}"
+
+            if angle < 10:
+                angle_string = f"00{angle}"
+            elif 10 < angle < 100:
+                angle_string = f"0{angle}"
+            else:
+                angle_string = f"{angle}"
+
+            message = f"{pin_string}{angle_string}\n"
+            self.ser.write(message.encode())
             if self.verbose:
-                print(f'Sending: {pin}{angle}')
+                print(f'Sending: {message}')
         except serial.SerialException as e:
             print(f"Serial Exception: {e}")
 
