@@ -22,7 +22,7 @@ class ServoBoard:
             print(f"Exception when initializing serial: {e}")
             raise
 
-    def send(self, pin, angle):
+    def set_position(self, pin, angle):
         try:
             if pin < 10:
                 pin_string = f"0{pin}"
@@ -38,6 +38,7 @@ class ServoBoard:
 
             message = f"{pin_string}{angle_string}\n"
             self.ser.write(message.encode())
+            time.sleep(1)
             if self.verbose:
                 print(f'Sending: {message}')
         except serial.SerialException as e:
