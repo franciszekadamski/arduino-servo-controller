@@ -21,6 +21,7 @@ class ServoBoard:
         except serial.SerialException as e:
             print(f"Exception when initializing serial: {e}")
             raise
+        self.previous_angle = 0
 
     def set_position(self, pin, angle):
         try:
@@ -38,19 +39,17 @@ class ServoBoard:
 
             message = f"{pin_string}{angle_string}\n"
             self.ser.write(message.encode())
-            time.sleep(1)
             if self.verbose:
                 print(f'Sending: {message}')
         except serial.SerialException as e:
             print(f"Serial Exception: {e}")
 
-    def run_sequence(self, sequence):
-        sequence.insert(0, 0)
-        previous_angle = sequence[0]
+    def run_sequence(self, pin, sequence):
         for angle in sequence:
-            self.send(angle)
-            time.sleep(abs(angle - previous_angle) / 350)
-            previous_angle = angle
+            self.set_position(pin, angle)
+            sleeping_time = round(abs(angle - self.previous_angle) / 350, 4)
+            time.sleep(sleeping_time)
+            self.previous_angle = angle
 
     def __del__(self):
         self.ser.close()

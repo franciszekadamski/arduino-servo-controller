@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-from servo_board import ServoBoard
+import sys
+sys.path.append("../")
+from lib.servo_board import ServoBoard
 
 def main():
     board = ServoBoard(verbose=True)
