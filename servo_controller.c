@@ -36,7 +36,7 @@ void loop() {
     String in_message = Serial.readStringUntil('\n');
     if(in_message.length() > 0) {
       String in_message_pin = in_message.substring(0, 2);
-      String in_message_angle = in_message.substring(2, 3);
+      String in_message_angle = in_message.substring(2);
 
       servo_pin = in_message_pin.toInt();
       servo_angle = in_message_angle.toInt();
