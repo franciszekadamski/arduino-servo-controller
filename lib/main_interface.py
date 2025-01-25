@@ -59,6 +59,7 @@ class MainInterface:
     def _continuous_decision_making(self):
         while self.running:
             if self.ret:
+                # add mock of decision
                 conclusion = 'low_humidity'
                 if conclusion == 'low_humidity':
                     self.text = "Too low humidity"
