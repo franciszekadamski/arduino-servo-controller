@@ -4,8 +4,8 @@ from servo_board import ServoBoard
 
 def main():
     board = ServoBoard(verbose=True)
-    for pin in range(12, 14):
-        for angle in [0, 45, 90, 135, 180, 90, 0]:
+    for pin in range(13, 14):
+        for angle in [95, 50, 95, 50, 95, 50, 95]:
             board.set_position(pin, angle)
 
 if __name__ == "__main__":
