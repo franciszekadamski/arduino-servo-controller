@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 
 from lib.servo_board import ServoBoard
+from lib.digit_recognizer import DigitRecognizer
 
 
 class MainInterface:
@@ -15,6 +16,8 @@ class MainInterface:
             camera_index=1,
             model_path='./models/mobilenet_best.keras'
         ):
+        self.recognizer = DigitRecognizer()
+
         self.running = True
         self._data_dir = data_dir
         self._camera_index = camera_index
@@ -59,6 +62,14 @@ class MainInterface:
     def _continuous_decision_making(self):
         while self.running:
             if self.ret:
+                measurement_digits = []
+                try:
+                    measurement_digits = self.recognizer(self.frame, 5, 5)
+                except:
+                    print("could not read the LCD")
+
+                print(measurement_digits)
+
                 # add mock of decision
                 conclusion = 'low_humidity'
                 if conclusion == 'low_humidity':
@@ -73,12 +84,14 @@ class MainInterface:
         self.board.run_sequence(self.current_pin, [50, 95])
 
     def _save_picture(self, frame):
+        print("Saving")
         if frame is not None:
             filename = os.path.join(
                 self._data_dir,
                 f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             )
             cv2.imwrite(filename, frame)
+            print("Saved")
 
     def _terminate(self):
         self.running = False
