@@ -51,5 +51,8 @@ class ServoBoard:
             time.sleep(sleeping_time)
             self.previous_angle = angle
 
+    def read(self):
+        return self.ser.readline()
+
     def __del__(self):
         self.ser.close()
