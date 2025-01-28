@@ -4,9 +4,9 @@ import cv2
 import numpy as np
 import time
 from datetime import datetime
+import zmq
 
 from lib.servo_board import ServoBoard
-from lib.digit_recognizer import DigitRecognizer
 
 
 class MainInterface:
@@ -14,9 +14,12 @@ class MainInterface:
             self,
             data_dir='./data/src/',
             camera_index=1,
-            model_path='./models/mobilenet_best.keras'
+            model_path='./models/mobilenet_best.keras',
+            port=5555
         ):
-        self.recognizer = DigitRecognizer()
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect(f"tcp://localhost:{port}")
 
         self.running = True
         self._data_dir = data_dir
@@ -51,6 +54,9 @@ class MainInterface:
                 cv2.LINE_AA
             )
             cv2.imshow(f'Camera {self._camera_index}', self.frame)
+
+            # self.socket.send(bytes(f"{self.state}"))
+            
             key = cv2.waitKey(1) & 0xFF
             if key == ord('c'):
                 self._save_picture(self.frame)
@@ -60,25 +66,13 @@ class MainInterface:
                 self._terminate()
 
     def _continuous_decision_making(self):
-        while self.running:
-            if self.ret:
-                measurement_digits = []
-                try:
-                    measurement_digits = self.recognizer(self.frame, 5, 5)
-                except:
-                    print("could not read the LCD")
-
-                print(measurement_digits)
-
-                # add mock of decision
-                conclusion = 'low_humidity'
-                if conclusion == 'low_humidity':
-                    self.text = "Too low humidity"
-                elif prediction == 'high_humidity':
-                    self.text = "Too high humidity"
-                else:
-                    self.text = "Who knows what is that..."
-            time.sleep(1 / self._decider_min_frequency_hz) 
+        while self.running:            
+            message = self.socket.recv()
+            message = str(message)
+            if message == "screenshot":
+                self._save_picture(self.frame)
+            elif message == "press-once":
+                self._press_once()
 
     def _press_once(self):
         self.board.run_sequence(self.current_pin, [50, 95])
