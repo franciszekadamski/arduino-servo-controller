@@ -29,9 +29,15 @@ void setup() {
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
   pinMode(13, OUTPUT);
+
+  // int ldr = A0;
+  // pinMode(ldr, INPUT);
 }
 
 void loop() {
+  // int data = analogRead(ldr);
+  // Serial.println(data);
+
   while (Serial.available() > 0) {
     String in_message = Serial.readStringUntil('\n');
     if(in_message.length() > 0) {
