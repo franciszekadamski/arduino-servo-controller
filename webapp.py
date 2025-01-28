@@ -6,7 +6,10 @@ socket = context.socket(zmq.REP)
 socket.bind("tcp://*:5555")
 
 def send(message):
-    socket.send(bytes(message))
+    try:
+        socket.send(bytes(message, "utf-8"))
+    except:
+        print("Could not send")
 
 def press_once():
     send("press-once")
@@ -16,4 +19,4 @@ def screenshot():
 
 st.title("WebApp")
 st.button(label="Press once", on_click=press_once)
-st.button(label="Press once", on_click=screenshot)
+st.button(label="Screenshot", on_click=screenshot)

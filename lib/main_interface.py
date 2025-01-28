@@ -55,7 +55,7 @@ class MainInterface:
             )
             cv2.imshow(f'Camera {self._camera_index}', self.frame)
 
-            # self.socket.send(bytes(f"{self.state}"))
+            # self.socket.send(bytes(f"{self.state}", "utf-8"))
             
             key = cv2.waitKey(1) & 0xFF
             if key == ord('c'):
