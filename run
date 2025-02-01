@@ -1,4 +1,5 @@
 #!/usr/bin/bash
 
+python3 -m streamlit run ./webapp.py &
 ./camera.py
-python3 -m streamlit run ./webapp.py
+

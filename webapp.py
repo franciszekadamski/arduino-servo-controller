@@ -3,7 +3,7 @@ import streamlit as st
 
 context = zmq.Context()
 socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5555")
+socket.bind("tcp://*:5556")
 
 def send(message):
     try:

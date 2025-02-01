@@ -15,11 +15,11 @@ class MainInterface:
             data_dir='./data/src/',
             camera_index=1,
             model_path='./models/mobilenet_best.keras',
-            port=5555
+            port=5556
         ):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect(f"tcp://localhost:{port}")
+        # self.socket.connect(f"tcp://localhost:{port}")
 
         self.running = True
         self._data_dir = data_dir
@@ -67,15 +67,23 @@ class MainInterface:
 
     def _continuous_decision_making(self):
         while self.running:            
-            message = self.socket.recv()
-            message = str(message)
-            if message == "screenshot":
-                self._save_picture(self.frame)
-            elif message == "press-once":
-                self._press_once()
+            # message = ""
+            # message = self.socket.recv()
+            # message = str(message)
+            # if message == "screenshot":
+            #     self._save_picture(self.frame)
+            # elif message == "press-once":
+            #     self._press_once()
+            air, soil = self.board.read().split('-')
+            air_p = round(int(air) / 3.3, 2)
+            soil_p = round(100 - (int(soil) / 7) + 4, 2)
+
+            self.text = f"Air: {air_p}%   Soil: {soil_p}%"
 
     def _press_once(self):
-        self.board.run_sequence(self.current_pin, [50, 95])
+        for pin in [12, 13]:
+            self.current_pin = pin    
+            self.board.run_sequence(self.current_pin, [50, 95])
 
     def _save_picture(self, frame):
         print("Saving")

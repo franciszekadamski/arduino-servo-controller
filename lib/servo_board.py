@@ -48,11 +48,11 @@ class ServoBoard:
         for angle in sequence:
             self.set_position(pin, angle)
             sleeping_time = round(abs(angle - self.previous_angle) / 350, 4)
-            time.sleep(sleeping_time)
+            time.sleep(2 * sleeping_time)
             self.previous_angle = angle
 
     def read(self):
-        return self.ser.readline()
+        return self.ser.readline().decode('utf-8').strip()
 
     def __del__(self):
         self.ser.close()
