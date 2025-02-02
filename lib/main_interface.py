@@ -1,3 +1,5 @@
+from queue import deque
+from statistics import median
 import os
 import threading
 import cv2
@@ -20,6 +22,11 @@ class MainInterface:
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
         # self.socket.connect(f"tcp://localhost:{port}")
+        
+        self.recent_data = deque(maxlen=155)
+        self.tresholds = {
+            "air_humidity": 85
+        }
 
         self.running = True
         self._data_dir = data_dir
@@ -30,7 +37,7 @@ class MainInterface:
         self._gui_thread = threading.Thread(target=self._main_loop)
         self._gui_thread.start()
 
-        self.board = ServoBoard()
+        self.board = ServoBoard(verbose=True)
         self.angle_deg = 95
         self.current_pin = 13
         
@@ -42,14 +49,14 @@ class MainInterface:
         while self.running:
             self.ret, self.frame = self._capture.read()
             if not self.ret:
-                self.frame = np.zeros(shape=(200, 200, 3), dtype=np.uint8)
+                self.frame = np.zeros(shape=(200, 500, 3), dtype=np.uint8)
             cv2.putText(
                 self.frame,
                 self.text,
                 (50, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
-                (255, 0, 0),
+                (0, 0, 0),
                 2,
                 cv2.LINE_AA
             )
@@ -61,9 +68,20 @@ class MainInterface:
             if key == ord('c'):
                 self._save_picture(self.frame)
             elif key == ord('p'):
-                self._press_once()
+                self._press_once(12)
+                self._press_once(13)
             elif key == ord('q'):
                 self._terminate()
+
+    def get_medians(self):
+        if not self.recent_data:  # Handle empty case
+            return {"air_mean": 0, "soil_mean": 0, "temperature_mean": 0}
+
+        air_mean = median(d["air_humidity_percent"] for d in self.recent_data)
+        soil_mean = median(d["soil_humidity_percent"] for d in self.recent_data)
+        temperature_mean = median(d["air_temperature_celsius"] for d in self.recent_data)
+
+        return {"air_mean": air_mean, "soil_mean": soil_mean, "temperature_mean": temperature_mean}
 
     def _continuous_decision_making(self):
         while self.running:            
@@ -74,16 +92,35 @@ class MainInterface:
             #     self._save_picture(self.frame)
             # elif message == "press-once":
             #     self._press_once()
-            air, soil = self.board.read().split('-')
-            air_p = round(int(air) / 3.3, 2)
-            soil_p = round(100 - (int(soil) / 7) + 4, 2)
+            try:
+                air, soil, temperature = self.board.read().split('-')
+            except:
+                air = 0
+                soil = 0
+                temperature = 0
+            data = {
+                "air_humidity_percent": 1.9 * int(air) / 3.3,
+                "soil_humidity_percent": 100 - (int(soil) / 7) + 4,
+                "air_temperature_celsius": int(float(temperature) - 6)
+            }
 
-            self.text = f"Air: {air_p}%   Soil: {soil_p}%"
+            self.recent_data.append(data)
+            air_p, soil_p, temperature_c = self.get_medians().values()
 
-    def _press_once(self):
-        for pin in [12, 13]:
-            self.current_pin = pin    
-            self.board.run_sequence(self.current_pin, [50, 95])
+            air_humidity_percent = round(air_p, 1)
+            soil_humidity_percent = round(soil_p, 1)
+            air_temperature_celsius = round(temperature_c, 1)
+
+            self.text = f"Ah:{air_humidity_percent}% Sh:{soil_humidity_percent}% At:{air_temperature_celsius}C"
+
+            # if air_humidity_percent < self.tresholds["air_humidity"]:
+            if air_humidity_percent < 85:
+                self._press_once(12)
+                self._press_once(13)
+
+
+    def _press_once(self, pin):
+            self.board.run_sequence(pin, [50, 95])
 
     def _save_picture(self, frame):
         print("Saving")

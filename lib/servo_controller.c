@@ -32,13 +32,18 @@ void setup() {
 
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
 }
 
 void loop() {
   int data_a0 = analogRead(A0);
   int data_a1 = analogRead(A1);
+  int data_a2 = analogRead(A2);
   Serial.print(data_a0);
-  Serial.println(data_a1);
+  Serial.print('-');
+  Serial.print(data_a1);
+  Serial.print('-');
+  Serial.println(data_a2);
 
   while (Serial.available() > 0) {
     String in_message = Serial.readStringUntil('\n');
