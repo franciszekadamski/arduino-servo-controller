@@ -47,14 +47,13 @@ class ServoBoard:
     def run_sequence(self, pin, sequence):
         for angle in sequence:
             self.set_position(pin, angle)
-            sleeping_time = round(abs(angle - self.previous_angle) / 350, 4)
+            sleeping_time = round(abs(angle - self.previous_angle) / 100, 4)
+            time.sleep(sleeping_time)
             
-            while self.read() != "DONE":
-                if self.verbose:
-                    print("Sleeping")
-                time.sleep(2 * sleeping_time)
-            if self.verbose:
-                print("DONE")
+            # while self.read() != "DONE":
+            #     time.sleep(sleeping_time)
+            # if self.verbose:
+            #     print("DONE")
             self.previous_angle = angle
 
     def read(self):

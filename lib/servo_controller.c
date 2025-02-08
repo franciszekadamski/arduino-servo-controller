@@ -1,60 +1,62 @@
-// const int LED_PIN = 13;
-volatile int servo_angle = 90;
-volatile int servo_pin = 9;
-String inputString = "";
+#include <Servo.h>
 
-void write_servo(int pin, int angle) {
-  int pulse_width = map(angle, 0, 180, 480, 2400);
+Servo water_valve_servo;
+Servo light_switch_servo;
 
-  digitalWrite(pin, HIGH);
-  delayMicroseconds(pulse_width);
-  digitalWrite(pin, LOW);
-  delayMicroseconds(20000 - pulse_width);
-}
+int water_valve_angle = 0;
+int light_switcher_angle = 0;
+
+const int water_valve_servo_pin = 10;
+const int light_switch_servo_pin = 11;
+
+const int air_humidity_sensor_pin = A0;
+const int soil_humidity_sensor_pin = A1;
+const int air_temperature_sensor_pin = A2;
+
+String in_message;
+String in_message_pin;
+String in_message_angle;
+
+int servo_pin;
+int servo_angle;
 
 void setup() {
   Serial.begin(9600);
 
-  pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
-  pinMode(13, OUTPUT);
+  water_valve_servo.attach(water_valve_servo_pin);
+  light_switch_servo.attach(light_switch_servo_pin);
 
-  pinMode(A0, INPUT);
-  pinMode(A1, INPUT);
-  pinMode(A2, INPUT);
+  pinMode(air_humidity_sensor_pin, INPUT);
+  pinMode(soil_humidity_sensor_pin, INPUT);
+  pinMode(air_temperature_sensor_pin, INPUT);
 }
 
 void loop() {
-  int data_a0 = analogRead(A0);
-  int data_a1 = analogRead(A1);
-  int data_a2 = analogRead(A2);
-  Serial.print(data_a0);
+  int air_humidity_read = analogRead(air_humidity_sensor_pin);
+  int soil_humidity_read = analogRead(soil_humidity_sensor_pin);
+  int air_temperature_read = analogRead(air_temperature_sensor_pin);
+  Serial.print(air_humidity_read);
   Serial.print('-');
-  Serial.print(data_a1);
+  Serial.print(soil_humidity_read);
   Serial.print('-');
-  Serial.println(data_a2);
+  Serial.println(air_temperature_read);
 
   while (Serial.available() > 0) {
-    String in_message = Serial.readStringUntil('\n');
+    in_message = Serial.readStringUntil('\n');
     if(in_message.length() > 0) {
-      String in_message_pin = in_message.substring(0, 2);
-      String in_message_angle = in_message.substring(2);
+      in_message_pin = in_message.substring(0, 2);
+      in_message_angle = in_message.substring(2);
 
       servo_pin = in_message_pin.toInt();
       servo_angle = in_message_angle.toInt();
+
+      if (servo_pin == water_valve_servo_pin) {
+        water_valve_servo.write(servo_angle);
+      } else if (servo_pin == light_switch_servo_pin) {
+        light_switch_servo.write(servo_angle);
+      }
     }
   }
-
-  write_servo(servo_pin, servo_angle);
+  delay(100);
 }
+

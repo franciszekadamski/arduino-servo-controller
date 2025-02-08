@@ -68,8 +68,8 @@ class MainInterface:
             if key == ord('c'):
                 self._save_picture(self.frame)
             elif key == ord('p'):
-                self._press_once(12)
-                self._press_once(13)
+                self._press_once(10)
+                self._press_once(11)
             elif key == ord('q'):
                 self._terminate()
 
@@ -94,6 +94,12 @@ class MainInterface:
             #     self._press_once()
             try:
                 air, soil, temperature = self.board.read().split('-')
+                if air == '':
+                    air = 0
+                if soil == '':
+                    soil = 0
+                if temperature == '':
+                    temperature = 0
             except:
                 air = 0
                 soil = 0
@@ -114,9 +120,12 @@ class MainInterface:
             self.text = f"Ah:{air_humidity_percent}% Sh:{soil_humidity_percent}% At:{air_temperature_celsius}C"
 
             # if air_humidity_percent < self.tresholds["air_humidity"]:
-            if air_humidity_percent < 85:
-                self._press_once(12)
-                self._press_once(13)
+            # if air_humidity_percent < 85:
+            #     self._press_once(10)
+            #     self._press_once(11)
+            #     time.sleep(2)
+
+            # time.sleep(1)
 
 
     def _press_once(self, pin):
