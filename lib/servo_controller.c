@@ -1,5 +1,6 @@
 #include <Servo.h>
 
+
 Servo water_valve_servo;
 Servo light_switch_servo;
 
@@ -20,6 +21,7 @@ String in_message_angle;
 int servo_pin;
 int servo_angle;
 
+// settings
 int water_valve_angle_open = 90;
 int water_valve_angle_close = 45;
 
@@ -28,13 +30,25 @@ int light_switch_angle_close = 45;
 
 unsigned long int light_switch_open_time_ms = 1000 * 60 * 60 * 16; // 57600 000 ms
 unsigned long int light_switch_period_time_ms = 1000 * 60 * 60 * 24; // 86400 000 ms
+unsigned long int light_switch_close_time_ms = light_switch_period_time_ms - ligth_switch_open_time_ms;
 
 int watering_state = 0; // 0: no watering; 1: watering;
 int lighting_state = 0; // 0: light off; 1: light on
 
+int watering_state_changed = 0;
+int lighting_state_changed = 0;
+
 int air_humidity_treshold = 85;
 int soil_humidit_treshold = 50;
 unsigned long int post_watering_wait_time_ms = 1000 * 60 * 10; // 600 000 ms
+unsigned long int watering_time_ms = 30 * 1000;
+
+unsigned long int watering_start_time_ms = 0;
+unsigned long int lighting_start_time_ms = 0;
+unsigned long int watering_stop_time_ms = 0;
+unsigned long int lighting_stop_time_ms = 0;
+
+unsigned long int up_time_ms = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -47,17 +61,21 @@ void setup() {
   pinMode(air_temperature_sensor_pin, INPUT);
 }
 
+
 void loop() {
+  // read sensors
   double air_humidity = analogRead(air_humidity_sensor_pin) * 1.9 / 3.3;
   double soil_humidity = 104 - (analogRead(soil_humidity_sensor_pin) / 7);
   int air_temperature = analogRead(air_temperature_sensor_pin);
 
+  // send data
   Serial.print(air_humidity);
   Serial.print('-');
   Serial.print(soil_humidity);
   Serial.print('-');
   Serial.println(air_temperature);
 
+  // receive control signals
   while (Serial.available() > 0) {
     in_message = Serial.readStringUntil('\n');
     if(in_message.length() > 0) {
@@ -75,9 +93,37 @@ void loop() {
     }
   }
 
-  if (air_humidity < air_humidity_treshold) {
-    watering_state = 1;
+  // check conditions and modify state
+  lighting_state_changed = 0;
+  if (lighting_state == 0) {
+    if (milis() - lighting_stop_time_ms > ligth_switch_close_time_ms) {
+      lighting_state = 1;
+      lighting_start_time_ms = milis();
+      lighting_state_changed = 1;
+    }
+  } else if (lighting_state == 1) {
+    if (milis() - lighting_start_time_ms > light_switch_open_time_ms) {
+      lighting_state = 0;
+      lighting_stop_time_ms = milis();
+      lighting_state_changed = 1;
+    }
   }
+
+  // adjust servos to the current state if changed
+  if (lighting_state_changed == 1) {
+    if (lighting_state == 0) {
+      light_switch_servo.write(light_switch_angle_close)
+    } else if (lighting_state == 1) {
+      light_switch_servo.write(light_switch_angle_open)
+    }
+
+    if (watering_state == 0) {
+      water_valve_servo.write(water_valve_angle_close)
+    } else if (watering_state == 1) {
+      water_valve_servo.write(water_valve_angle_open)
+    }
+  }
+
   delay(100);
 }
 
