@@ -20,6 +20,22 @@ String in_message_angle;
 int servo_pin;
 int servo_angle;
 
+int water_valve_angle_open = 90;
+int water_valve_angle_close = 45;
+
+int light_switch_angle_open = 90;
+int light_switch_angle_close = 45;
+
+unsigned long int light_switch_open_time_ms = 1000 * 60 * 60 * 16; // 57600 000 ms
+unsigned long int light_switch_period_time_ms = 1000 * 60 * 60 * 24; // 86400 000 ms
+
+int watering_state = 0; // 0: no watering; 1: watering;
+int lighting_state = 0; // 0: light off; 1: light on
+
+int air_humidity_treshold = 85;
+int soil_humidit_treshold = 50;
+unsigned long int post_watering_wait_time_ms = 1000 * 60 * 10; // 600 000 ms
+
 void setup() {
   Serial.begin(9600);
 
@@ -32,14 +48,15 @@ void setup() {
 }
 
 void loop() {
-  int air_humidity_read = analogRead(air_humidity_sensor_pin);
-  int soil_humidity_read = analogRead(soil_humidity_sensor_pin);
-  int air_temperature_read = analogRead(air_temperature_sensor_pin);
-  Serial.print(air_humidity_read);
+  double air_humidity = analogRead(air_humidity_sensor_pin) * 1.9 / 3.3;
+  double soil_humidity = 104 - (analogRead(soil_humidity_sensor_pin) / 7);
+  int air_temperature = analogRead(air_temperature_sensor_pin);
+
+  Serial.print(air_humidity);
   Serial.print('-');
-  Serial.print(soil_humidity_read);
+  Serial.print(soil_humidity);
   Serial.print('-');
-  Serial.println(air_temperature_read);
+  Serial.println(air_temperature);
 
   while (Serial.available() > 0) {
     in_message = Serial.readStringUntil('\n');
@@ -56,6 +73,10 @@ void loop() {
         light_switch_servo.write(servo_angle);
       }
     }
+  }
+
+  if (air_humidity < air_humidity_treshold) {
+    watering_state = 1;
   }
   delay(100);
 }
