@@ -127,3 +127,42 @@ void loop() {
   delay(100);
 }
 
+// // Function to handle lighting state changes
+// void handleLightingState() {
+//   unsigned long currentMillis = milis();
+
+//   // Check if lighting needs to be turned on (state 0 -> 1)
+//   if (lighting_state == 0 && currentMillis - lighting_stop_time_ms > ligth_switch_close_time_ms) {
+//     lighting_state = 1;
+//     lighting_start_time_ms = currentMillis;
+//     lighting_state_changed = 1;
+//   }
+//   // Check if lighting needs to be turned off (state 1 -> 0)
+//   else if (lighting_state == 1 && currentMillis - lighting_start_time_ms > light_switch_open_time_ms) {
+//     lighting_state = 0;
+//     lighting_stop_time_ms = currentMillis;
+//     lighting_state_changed = 1;
+//   }
+// }
+
+// // Function to adjust servos based on state
+// void adjustServos() {
+//   if (lighting_state_changed == 1) {
+//     // Adjust lighting servo based on state
+//     light_switch_servo.write(lighting_state == 0 ? light_switch_angle_close : light_switch_angle_open);
+
+//     // Adjust watering valve servo based on watering state
+//     water_valve_servo.write(watering_state == 0 ? water_valve_angle_close : water_valve_angle_open);
+
+//     // Reset the state change flag after adjustment
+//     lighting_state_changed = 0;
+//   }
+// }
+
+// void loop() {
+//   // Handle lighting state changes
+//   handleLightingState();
+
+//   // Adjust servos if any state change occurred
+//   adjustServos();
+// }
