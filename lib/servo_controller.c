@@ -4,9 +4,6 @@
 Servo water_valve_servo;
 Servo light_switch_servo;
 
-int water_valve_angle = 0;
-int light_switcher_angle = 0;
-
 const int water_valve_servo_pin = 10;
 const int light_switch_servo_pin = 11;
 
@@ -23,6 +20,8 @@ int servo_angle;
 
 // settings
 int mode = 1;
+int send_settings = 0;
+int send_settings = 0;
 
 int water_valve_angle_open = 90;
 int water_valve_angle_close = 45;
@@ -72,11 +71,15 @@ void sendSensorData(
   double soil_humidity,
   int air_temperature
 ) {
-  Serial.print(air_humidity);
-  Serial.print('-');
-  Serial.print(soil_humidity);
-  Serial.print('-');
-  Serial.println(air_temperature);  
+  if (send_sensor_data) {
+    Serial.print(air_humidity);
+    Serial.print('-');
+    Serial.print(soil_humidity);
+    Serial.print('-');
+    Serial.println(air_temperature);
+
+    send_sensor_data = 0;
+  }
 }
 
 
@@ -99,6 +102,65 @@ void receiveControlMessage() {
   }
 }
 
+
+void receiveMessage() {
+  while (Serial.available() > 0) {
+    in_message = Serial.readStringUntil('\n');
+    if (in_message.length() > 0 && in_message == "GET_SETTINGS") {
+      send_settings = 1;
+    } else if (in_message.length() > 0 && in_message == "SET_SETTINGS") {
+      setSettings(in_message);
+    } else if (in_message.length() > 0 && in_message == "GET_SENSOR_DATA") {
+      send_sensor_data = 1;
+    }
+  }
+}
+
+void setSettings(String in_message) {
+  // TODO
+}
+
+void sendSettings() {
+  if (send_settings) {
+    Serial.print(water_valve_servo_pin);
+    Serial.print('-');
+    Serial.print(light_switch_servo_pin);
+    Serial.print('-');
+    Serial.print(water_valve_angle_open);
+    Serial.print('-');
+    Serial.print(water_valve_angle_close);
+    Serial.print('-');
+    Serial.print(light_switch_angle_open);
+    Serial.print('-');
+    Serial.print(light_switch_angle_close);
+    Serial.print('-');
+    Serial.print(light_switch_open_time_ms);
+    Serial.print('-');
+    Serial.print(light_switch_period_time_ms);
+    Serial.print('-');
+    Serial.print(water_valve_open_time_ms);
+    Serial.print('-');
+    Serial.print(water_valve_closed_time_ms);
+    Serial.print('-');
+    Serial.print(air_humidity_treshold);
+    Serial.print('-');
+    Serial.print(soil_humidit_treshold);
+    Serial.print('-');
+    Serial.print(post_watering_wait_time_ms);
+    Serial.print('-');
+    Serial.print(watering_time_ms);
+    Serial.print('-');
+    Serial.print(watering_start_time_ms);
+    Serial.print('-');
+    Serial.print(watering_stop_time_ms);
+    Serial.print('-');
+    Serial.print(lighting_start_time_ms);
+    Serial.print('-');
+    Serial.println(lighting_stop_time_ms);
+
+    send_settings = 0;
+  }
+}
 
 void handleLightingStateBySchedule() {
   unsigned long currentMillis = millis();
@@ -156,22 +218,24 @@ void loop() {
   double soil_humidity = 104 - (analogRead(soil_humidity_sensor_pin) / 7);
   int air_temperature = analogRead(air_temperature_sensor_pin);
 
-  sendSensorData(air_humidity, soil_humidity, air_temperature);
   switch (mode) {
     case 0:
       receiveControlMessage();
       break;
     case 1:
+      receiveMessage();
       handleLightingStateBySchedule();
       handleWateringStateByValue(air_humidity);
       adjustServos();
       break;
     default:
+      receiveMessage();
       handleLightingStateBySchedule();
       handleWateringStateByValue(air_humidity);
       adjustServos();
       break;
   }
-  
+  sendSensorData(air_humidity, soil_humidity, air_temperature);
+  sendSettings();  
   delay(100);
 }
