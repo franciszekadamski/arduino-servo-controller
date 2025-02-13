@@ -4,12 +4,12 @@
 Servo water_valve_servo;
 Servo light_switch_servo;
 
-const int water_valve_servo_pin = 10;
-const int light_switch_servo_pin = 11;
+int water_valve_servo_pin = 10;
+int light_switch_servo_pin = 11;
 
-const int air_humidity_sensor_pin = A0;
-const int soil_humidity_sensor_pin = A1;
-const int air_temperature_sensor_pin = A2;
+int air_humidity_sensor_pin = A0;
+int soil_humidity_sensor_pin = A1;
+int air_temperature_sensor_pin = A2;
 
 String in_message;
 String in_message_pin;
@@ -21,7 +21,7 @@ int servo_angle;
 // settings
 int mode = 1;
 int send_settings = 0;
-int send_settings = 0;
+int send_sensor_data = 0;
 
 int water_valve_angle_open = 90;
 int water_valve_angle_close = 45;
@@ -42,8 +42,8 @@ int lighting_state = 0; // 0: light off; 1: light on
 int watering_state_changed = 0;
 int lighting_state_changed = 0;
 
-double air_humidity_treshold = 120.0;
-double soil_humidit_treshold = 50.0;
+int air_humidity_treshold = 120;
+int soil_humidit_treshold = 50;
 unsigned long int post_watering_wait_time_ms = 1000 * 60 * 10; // 600 000 ms
 unsigned long int watering_time_ms = 30 * 1000;
 
@@ -53,6 +53,22 @@ unsigned long int watering_stop_time_ms = 0;
 unsigned long int lighting_stop_time_ms = 0;
 
 unsigned long int up_time_ms = 0;
+
+String water_valve_servo_pin_string;
+String light_switch_servo_pin_string;
+String water_valve_angle_open_string;
+String water_valve_angle_close_string;
+String light_switch_angle_open_string;
+String light_switch_angle_close_string;
+String light_switch_open_time_ms_string;
+String light_switch_period_time_ms_string;
+String water_valve_open_time_ms_string;
+String water_valve_closed_time_ms_string;
+String air_humidity_treshold_string;
+String soil_humidit_treshold_string;
+String post_watering_wait_time_ms_string;
+String watering_time_ms_string;
+
 
 void setup() {
   Serial.begin(9600);
@@ -108,17 +124,48 @@ void receiveMessage() {
     in_message = Serial.readStringUntil('\n');
     if (in_message.length() > 0 && in_message == "GET_SETTINGS") {
       send_settings = 1;
-    } else if (in_message.length() > 0 && in_message == "SET_SETTINGS") {
-      setSettings(in_message);
     } else if (in_message.length() > 0 && in_message == "GET_SENSOR_DATA") {
       send_sensor_data = 1;
+    } else if (in_message.length() > 0 && in_message.substring(0, 12) == "SET_SETTINGS") {
+      setSettings(in_message);
     }
   }
 }
 
+
 void setSettings(String in_message) {
-  // TODO
+    // example message: SET_SETTINGS1011090045090045576000008640000000005000006000001200500060000030000 
+    water_valve_servo_pin_string = in_message.substring(12, 14); // int 2 digit long
+    light_switch_servo_pin_string = in_message.substring(14, 16); // int 2 digit long
+    water_valve_angle_open_string = in_message.substring(16, 19); // int 3 digit long
+    water_valve_angle_close_string = in_message.substring(19, 22); // int 3 digit long
+    light_switch_angle_open_string = in_message.substring(22, 25); // int 3 digit long
+    light_switch_angle_close_string = in_message.substring(25, 28); // int 3 digit long
+    light_switch_open_time_ms_string = in_message.substring(28, 36); // unsigned long int 8 digit long
+    light_switch_period_time_ms_string = in_message.substring(36, 44); // unsigned long int 8 digit long
+    water_valve_open_time_ms_string = in_message.substring(44, 52); // unsigned long int 8 digit long
+    water_valve_closed_time_ms_string = in_message.substring(52, 60); // unsigned long int 8 digit long
+    air_humidity_treshold_string = in_message.substring(60, 63); // int digit 3 long
+    soil_humidit_treshold_string = in_message.substring(63, 66); // int digit 3 long
+    post_watering_wait_time_ms_string = in_message.substring(66, 74); // unsigned long int 8 digit long
+    watering_time_ms_string = in_message.substring(74, 82); // unsigned long int 8 digit long
+
+    water_valve_servo_pin = water_valve_servo_pin_string.toInt();
+    light_switch_servo_pin = light_switch_servo_pin_string.toInt();
+    water_valve_angle_open = water_valve_angle_open_string.toInt();
+    water_valve_angle_close = water_valve_angle_close_string.toInt();
+    light_switch_angle_open = light_switch_angle_open_string.toInt();
+    light_switch_angle_close = light_switch_angle_close_string.toInt();
+    light_switch_open_time_ms = light_switch_open_time_ms_string.toInt();
+    light_switch_period_time_ms = light_switch_period_time_ms_string.toInt();
+    water_valve_open_time_ms = water_valve_open_time_ms_string.toInt();
+    water_valve_closed_time_ms = water_valve_closed_time_ms_string.toInt();
+    air_humidity_treshold = air_humidity_treshold_string.toInt();
+    soil_humidit_treshold = soil_humidit_treshold_string.toInt();
+    post_watering_wait_time_ms = post_watering_wait_time_ms_string.toInt();
+    watering_time_ms = watering_time_ms_string.toInt();    
 }
+
 
 void sendSettings() {
   if (send_settings) {
@@ -148,15 +195,7 @@ void sendSettings() {
     Serial.print('-');
     Serial.print(post_watering_wait_time_ms);
     Serial.print('-');
-    Serial.print(watering_time_ms);
-    Serial.print('-');
-    Serial.print(watering_start_time_ms);
-    Serial.print('-');
-    Serial.print(watering_stop_time_ms);
-    Serial.print('-');
-    Serial.print(lighting_start_time_ms);
-    Serial.print('-');
-    Serial.println(lighting_stop_time_ms);
+    Serial.println(watering_time_ms);
 
     send_settings = 0;
   }
