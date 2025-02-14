@@ -30,8 +30,7 @@ int light_switch_angle_open = 90;
 int light_switch_angle_close = 45;
 
 unsigned long int light_switch_open_time_ms = 1000 * 60 * 60 * 16; // 57600 000 ms
-unsigned long int light_switch_period_time_ms = 1000 * 60 * 60 * 24; // 86400 000 ms
-unsigned long int light_switch_close_time_ms = light_switch_period_time_ms - light_switch_open_time_ms;
+unsigned long int light_switch_close_time_ms = 1000 * 60 * 60 * 8; // 28800 000 ms
 
 unsigned long int water_valve_open_time_ms = 1000 * 5;
 unsigned long int water_valve_closed_time_ms = 1000 * 60 * 10;
@@ -61,7 +60,7 @@ String water_valve_angle_close_string;
 String light_switch_angle_open_string;
 String light_switch_angle_close_string;
 String light_switch_open_time_ms_string;
-String light_switch_period_time_ms_string;
+String light_switch_close_time_ms_string;
 String water_valve_open_time_ms_string;
 String water_valve_closed_time_ms_string;
 String air_humidity_treshold_string;
@@ -75,7 +74,7 @@ void setup() {
 
   water_valve_servo.attach(water_valve_servo_pin);
   light_switch_servo.attach(light_switch_servo_pin);
-
+  
   pinMode(air_humidity_sensor_pin, INPUT);
   pinMode(soil_humidity_sensor_pin, INPUT);
   pinMode(air_temperature_sensor_pin, INPUT);
@@ -142,7 +141,7 @@ void setSettings(String in_message) {
     light_switch_angle_open_string = in_message.substring(22, 25); // int 3 digit long
     light_switch_angle_close_string = in_message.substring(25, 28); // int 3 digit long
     light_switch_open_time_ms_string = in_message.substring(28, 36); // unsigned long int 8 digit long
-    light_switch_period_time_ms_string = in_message.substring(36, 44); // unsigned long int 8 digit long
+    light_switch_close_time_ms_string = in_message.substring(36, 44); // unsigned long int 8 digit long
     water_valve_open_time_ms_string = in_message.substring(44, 52); // unsigned long int 8 digit long
     water_valve_closed_time_ms_string = in_message.substring(52, 60); // unsigned long int 8 digit long
     air_humidity_treshold_string = in_message.substring(60, 63); // int digit 3 long
@@ -157,7 +156,7 @@ void setSettings(String in_message) {
     light_switch_angle_open = light_switch_angle_open_string.toInt();
     light_switch_angle_close = light_switch_angle_close_string.toInt();
     light_switch_open_time_ms = light_switch_open_time_ms_string.toInt();
-    light_switch_period_time_ms = light_switch_period_time_ms_string.toInt();
+    light_switch_close_time_ms = light_switch_close_time_ms_string.toInt();
     water_valve_open_time_ms = water_valve_open_time_ms_string.toInt();
     water_valve_closed_time_ms = water_valve_closed_time_ms_string.toInt();
     air_humidity_treshold = air_humidity_treshold_string.toInt();
@@ -183,7 +182,7 @@ void sendSettings() {
     Serial.print('-');
     Serial.print(light_switch_open_time_ms);
     Serial.print('-');
-    Serial.print(light_switch_period_time_ms);
+    Serial.print(light_switch_close_time_ms);
     Serial.print('-');
     Serial.print(water_valve_open_time_ms);
     Serial.print('-');
@@ -228,7 +227,7 @@ void handleWateringStateByValue(double air_humidity) {
     watering_state = 1;
     watering_start_time_ms = currentMillis;
     watering_state_changed = 1;
-  } if (watering_state == 1 &&
+  } else if (watering_state == 1 &&
       currentMillis - watering_start_time_ms > water_valve_open_time_ms
   ) {
     watering_state = 0;
@@ -239,16 +238,22 @@ void handleWateringStateByValue(double air_humidity) {
 
 
 void adjustServos() {
-  if (lighting_state_changed == 1) {
+  if (lighting_state_changed) {
     light_switch_servo.write(
       lighting_state == 0 ? light_switch_angle_close : light_switch_angle_open
     );
+    lighting_state_changed = 0;
+  }
+  
+  if (watering_state_changed) {
     water_valve_servo.write(
       watering_state == 0 ? water_valve_angle_close : water_valve_angle_open
     );
-    lighting_state_changed = 0;
+    watering_state_changed = 0;
   }
 }
+
+
 
 
 void loop() {
@@ -275,6 +280,6 @@ void loop() {
       break;
   }
   sendSensorData(air_humidity, soil_humidity, air_temperature);
-  sendSettings();  
-  delay(100);
+  sendSettings();
 }
+
