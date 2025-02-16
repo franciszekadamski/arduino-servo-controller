@@ -4,8 +4,8 @@
 Servo water_valve_servo;
 Servo light_switch_servo;
 
-int water_valve_servo_pin = 10;
-int light_switch_servo_pin = 11;
+int water_valve_servo_pin = 11;
+int light_switch_servo_pin = 10;
 
 int air_humidity_sensor_pin = A0;
 int soil_humidity_sensor_pin = A1;
@@ -26,8 +26,8 @@ int send_sensor_data = 0;
 int water_valve_angle_open = 90;
 int water_valve_angle_close = 45;
 
-int light_switch_angle_open = 90;
-int light_switch_angle_close = 45;
+int light_switch_angle_open = 110;
+int light_switch_angle_close = 70;
 
 unsigned long int light_switch_open_time_ms = 1000 * 60 * 60 * 16; // 57600 000 ms
 unsigned long int light_switch_close_time_ms = 1000 * 60 * 60 * 8; // 28800 000 ms
@@ -78,6 +78,10 @@ void setup() {
   pinMode(air_humidity_sensor_pin, INPUT);
   pinMode(soil_humidity_sensor_pin, INPUT);
   pinMode(air_temperature_sensor_pin, INPUT);
+  
+  light_switch_servo.write(light_switch_angle_close);
+  water_valve_servo.write(water_valve_angle_close);
+  
 }
 
 
@@ -282,4 +286,5 @@ void loop() {
   sendSensorData(air_humidity, soil_humidity, air_temperature);
   sendSettings();
 }
+
 
