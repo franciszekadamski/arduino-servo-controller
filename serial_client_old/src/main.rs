@@ -20,22 +20,23 @@ fn serial_request(port: &SerialPort, message: &str) -> Result<Vec<f64>, std::io:
         .filter_map(|v| v.parse::<f64>().ok())
         .collect();
 
-    if values.len() == 4 {
-        let air_humidity_percent = values[0];
-        let soil_humidity_percent = values[1];
-        let air_temperature_c_degrees = values[2];
-        let time_h = values.get(3).map(|&time_ms| time_ms / (1000.0 * 60.0 * 60.0)).unwrap_or(0.0);
-        let values = vec![
-            air_humidity_percent,
-            soil_humidity_percent,
-            air_temperature_c_degrees,
-            time_h
-        ];
-        
-    } else {
-        eprintln!("Invalid data received: {message:?}");
+    match values.len() == 4 {
+        true => {
+            let air_humidity_percent = values[0];
+            let soil_humidity_percent = values[1];
+            let air_temperature_c_degrees = values[2];
+            let time_h = values.get(3).map(|&time_ms| time_ms / (1000.0 * 60.0 * 60.0)).unwrap_or(0.0);
+            let results = vec![
+                air_humidity_percent,
+                soil_humidity_percent,
+                air_temperature_c_degrees,
+                time_h
+            ]
+        },
+        false => {
+            eprintln!("Invalid data received: {message:?}");
+        },
     }
-    Ok(values)
 }
 
 // fn main() {
