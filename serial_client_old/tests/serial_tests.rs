@@ -1,7 +1,7 @@
 use serial2::SerialPort;
 use std::{fs::OpenOptions, io::Write, thread, time::Duration};
 
-use serial_client::serial_request;
+use serial_client::SerialRequest;
 
 
 #[test]
@@ -17,11 +17,12 @@ fn test_serial_request_with_virtual_port() {
         .open(write_port_path)
         .expect("Failed to open paired test serial port");
 
-    writeln!(write_port, "50.0-30.0-22.5-3600000").expect("Failed to write to test serial port");
+    writeln!(write_port, "50.0-30.0-22.5-3600000")
+        .expect("Failed to write to test serial port");
 
     thread::sleep(Duration::from_millis(100));
 
-    let result = serial_request(&port, "GET_SENSOR_DATA");
+    let result = port.serial_request("GET_SENSOR_DATA");
     assert!(result.is_ok());
 
     let values = result.unwrap();
